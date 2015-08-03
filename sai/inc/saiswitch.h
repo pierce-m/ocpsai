@@ -1,17 +1,17 @@
 /*
-* Copyright (c) 2014 Microsoft Open Technologies, Inc. 
-*   
-*    Licensed under the Apache License, Version 2.0 (the "License"); you may 
-*    not use this file except in compliance with the License. You may obtain 
+* Copyright (c) 2014 Microsoft Open Technologies, Inc.
+*
+*    Licensed under the Apache License, Version 2.0 (the "License"); you may
+*    not use this file except in compliance with the License. You may obtain
 *    a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
 *
-*    THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR 
-*    CONDITIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT 
-*    LIMITATION ANY IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS 
+*    THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR
+*    CONDITIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT
+*    LIMITATION ANY IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS
 *    FOR A PARTICULAR PURPOSE, MERCHANTABLITY OR NON-INFRINGEMENT.
 *
-*    See the Apache Version 2.0 License for specific language governing 
-*    permissions and limitations under the License. 
+*    See the Apache Version 2.0 License for specific language governing
+*    permissions and limitations under the License.
 *
 *    Microsoft would like to thank the following companies for their review and
 *    assistance with these files: Intel Corporation, Mellanox Technologies Ltd,
@@ -34,7 +34,6 @@
 #include "saiport.h"
 #include "saifdb.h"
 #include "saihostintf.h"
-
 
 #define SAI_MAX_HARDWARE_ID_LEN         255
 #define SAI_MAX_FIRMWARE_PATH_NAME_LEN  PATH_MAX
@@ -109,8 +108,8 @@ typedef enum _sai_switch_hash_algo_t
 /*
 * Attribute data for SAI_SWITCH_SWITCHING_MODE
 */
-typedef enum _sai_switch_switching_mode_t 
-{ 
+typedef enum _sai_switch_switching_mode_t
+{
     /* cut-through switching mode */
     SAI_SWITCHING_MODE_CUT_THROUGH,
 
@@ -120,7 +119,7 @@ typedef enum _sai_switch_switching_mode_t
 } sai_switch_switching_mode_t;
 
 /*
-*  Attribute Id in sai_set_switch_attribute() and 
+*  Attribute Id in sai_set_switch_attribute() and
 *  sai_get_switch_attribute() calls
 */
 typedef enum _sai_switch_attr_t
@@ -142,7 +141,7 @@ typedef enum _sai_switch_attr_t
     /* The size of the FDB Table in bytes [uint32_t] */
     SAI_SWITCH_ATTR_FDB_TABLE_SIZE,
 
-    /* 
+    /*
     *   Local subnet routing supported [bool]
     *   Routes with next hop set to "on-link"
     */
@@ -151,12 +150,12 @@ typedef enum _sai_switch_attr_t
     /* Oper state [sai_switch_oper_status_t] */
     SAI_SWITCH_ATTR_OPER_STATUS,
 
-    /* The current value of the maximum temperature 
+    /* The current value of the maximum temperature
      * retrieved from the switch sensors, in Celsius [int32_t] */
     SAI_SWITCH_ATTR_MAX_TEMP,
 
-    /* minimum priority for ACL table [sai_uint32_t] */ 
-    SAI_SWITCH_ATTR_ACL_TABLE_MINIMUM_PRIORITY, 
+    /* minimum priority for ACL table [sai_uint32_t] */
+    SAI_SWITCH_ATTR_ACL_TABLE_MINIMUM_PRIORITY,
 
     /* maximum priority for ACL table [sai_uint32_t] */
     SAI_SWITCH_ATTR_ACL_TABLE_MAXIMUM_PRIORITY,
@@ -170,6 +169,23 @@ typedef enum _sai_switch_attr_t
     /* Default SAI STP instance ID [sai_object_id_t] */
     SAI_SWITCH_ATTR_DEFAULT_STP_INST_ID,
 
+    /** Maximum traffic classes limit*/
+    SAI_SWITCH_ATTR_QOS_MAX_NUMBER_OF_TRAFFIC_CLASSES,
+
+    /** HQOS - Maximum Number of Hierarchy scheduler
+     *  group levels(depth) supported [sai_uint32_t]*/
+    SAI_SWITCH_ATTR_QOS_MAX_NUMBER_OF_SCHEDULER_GROUP_HIERARCHY_LEVELS,
+
+    /** HQOS - Maximum number of scheduler groups supported on
+     * each Hierarchy level [sai_u32_list_t] */
+    SAI_SWITCH_ATTR_QOS_MAX_NUMBER_OF_SCHEDULER_GROUPS_PER_HIERARCHY_LEVEL,
+
+    /* Maximum number of ports that can be part of a LAG [uint32_t] */
+    SAI_SWITCH_ATTR_MAX_LAG_MEMBERS,
+
+    /* Maximum number of LAGs that can be created per switch [uint32_t] */
+    SAI_SWITCH_ATTR_MAX_LAG_NUMBER,
+
     /* READ-WRITE */
 
     /* Switching mode [sai_switch_switching_mode_t]
@@ -179,10 +195,10 @@ typedef enum _sai_switch_attr_t
     /* L2 broadcast flood control to CPU port [bool] */
     SAI_SWITCH_ATTR_BCAST_CPU_FLOOD_ENABLE,
 
-    /* L2 multicast flood control to CPU port [bool] */ 
+    /* L2 multicast flood control to CPU port [bool] */
     SAI_SWITCH_ATTR_MCAST_CPU_FLOOD_ENABLE,
 
-    /* Default VlanID for ports that are not members of 
+    /* Default VlanID for ports that are not members of
        any vlans [sai_vlan_id_t]  (default to vlan 1)*/
     SAI_SWITCH_ATTR_DEFAULT_PORT_VLAN_ID,
 
@@ -193,7 +209,7 @@ typedef enum _sai_switch_attr_t
      * zero means learning limit disable. (default to zero) */
     SAI_SWITCH_ATTR_MAX_LEARNED_ADDRESSES,
 
-    /* Dynamic FDB entry aging time in seconds [uint32_t] 
+    /* Dynamic FDB entry aging time in seconds [uint32_t]
     *   Zero means aging is disabled.
     *  (default to zero)
     */
@@ -238,18 +254,18 @@ typedef enum _sai_switch_attr_t
        (default to 64) */
     SAI_SWITCH_ATTR_ECMP_MAX_PATHS,
 
-    /* The SDK can 
+    /* The SDK can
      * 1 - Read the counters directly from HW (or)
      * 2 - Cache the counters in SW. Caching is typically done if
-     * retrieval of counters directly from HW for each counter 
+     * retrieval of counters directly from HW for each counter
      * read is CPU intensive
-     * This setting can be used to 
+     * This setting can be used to
      * 1 - Move from HW based to SW based or Vice versa
      * 2 - Configure the SW counter cache refresh rate
      * Setting a value of 0 enables direct HW based counter read. A
      * non zero value enables the SW cache based and the counter
-     * refresh rate. 
-     * A NPU may support both or one of the option. It would return 
+     * refresh rate.
+     * A NPU may support both or one of the option. It would return
      * error for unsupported options
      *
      * Default - 1 sec (SW counter cache)
@@ -263,7 +279,7 @@ typedef enum _sai_switch_attr_t
     SAI_SWITCH_ATTR_DEFAULT_TRAP_CHANNEL,
 
     /* Default file descriptor for SAI_HOSTIF_TRAP_CHANNEL_FD [sai_object_id_t]
-     * Must be set before set SAI_SWITCH_ATTR_DEFAULT_TRAP_CHANNEL to SAI_HOSTIF_TRAP_CHANNEL_FD 
+     * Must be set before set SAI_SWITCH_ATTR_DEFAULT_TRAP_CHANNEL to SAI_HOSTIF_TRAP_CHANNEL_FD
      * (default to SAI_NULL_OBJECT_ID) */
     SAI_SWITCH_ATTR_DEFAULT_TRAP_CHANNEL_FD,
 
@@ -276,13 +292,78 @@ typedef enum _sai_switch_attr_t
      */
     SAI_SWITCH_ATTR_DEFAULT_TRAP_GROUP,
 
+    /* Default Traffic class value, Defalut TC = 0 */
+    SAI_SWITCH_ATTR_QOS_DEFAULT_TC,
+
+    /* Enable DOT1P -> TC MAP [sai_object_id_t] on switch.
+     * MAP id = SAI_NULL_OBJECT_ID to disable map on switch.
+     * To enable/disbale trust Dot1p, Map ID should be add/remove on switch.
+     * Default disabled */
+    SAI_SWITCH_ATTR_QOS_DOT1P_TO_TC_MAP,
+
+    /* Enable DOT1P -> COLOR MAP [sai_object_id_t] on switch.
+     * MAP id = SAI_NULL_OBJECT_ID to disable map on switch.
+     * To enable/disbale trust Dot1p, Map ID should be add/remove on switch.
+     * Default disabled */
+    SAI_SWITCH_ATTR_QOS_DOT1P_TO_COLOR_MAP,
+
+    /* Enable DOT1P -> TC AND COLOR MAP [sai_object_id_t] on switch.
+     * MAP id = SAI_NULL_OBJECT_ID to disable map on switch.
+     * To enable/disbale trust Dot1p, Map ID should be add/remove on switch.
+     * Default disabled */
+    SAI_SWITCH_ATTR_QOS_DOT1P_TO_TC_AND_COLOR_MAP,
+
+    /* Enable DSCP -> TC MAP [sai_object_id_t] on switch.
+     * MAP id = SAI_NULL_OBJECT_ID to disable map on switch.
+     * To enable/disbale trust DSCP, Map ID should be add/remove on port.
+     * Default no map */
+    SAI_SWITCH_ATTR_QOS_DSCP_TO_TC_MAP,
+
+    /* Enable DSCP -> COLOR MAP [sai_object_id_t] on switch
+     * MAP id = SAI_NULL_OBJECT_ID to disable map on switch.
+     * To enable/disbale trust DSCP, Map ID should be add/remove on switch.
+     * Default no map */
+    SAI_SWITCH_ATTR_QOS_DSCP_TO_COLOR_MAP,
+
+    /* Enable DSCP -> TC AND COLOR MAP [sai_object_id_t] on switch
+     * MAP id = SAI_NULL_OBJECT_ID to disable map on switch.
+     * To enable/disbale trust DSCP, Map ID should be add/remove on switch.
+     * Default no map */
+    SAI_SWITCH_ATTR_QOS_DSCP_TO_TC_AND_COLOR_MAP,
+
+    /* Enable TC -> Queue MAP [sai_object_id_t] on switch
+     * Map id = SAI_NULL_OBJECT_ID to disable map on switch.
+     * Default no map i.e All packets to queue 0.
+     */
+    SAI_SWITCH_ATTR_QOS_TC_TO_QUEUE_MAP,
+
+    /* Enable TC -> DOT1P MAP [sai_object_id_t]
+       Map id = SAI_NULL_OBJECT_ID to disable map on switch.
+       Default no map */
+    SAI_SWITCH_ATTR_QOS_TC_TO_DOT1P_MAP,
+
+    /* Enable TC + COLOR -> DOT1P MAP [sai_object_id_t]
+       Map id = SAI_NULL_OBJECT_ID to disable map on switch.
+       Default no map */
+    SAI_SWITCH_ATTR_QOS_TC_AND_COLOR_TO_DOT1P_MAP,
+
+    /* Enable TC -> DSCP MAP [sai_object_id_t]
+       Map id = SAI_NULL_OBJECT_ID to disable map on switch.
+       Default no map */
+    SAI_SWITCH_ATTR_QOS_TC_TO_DSCP_MAP,
+
+    /* Enable TC + COLOR -> DSCP MAP [sai_object_id_t]
+       Map id = SAI_NULL_OBJECT_ID to disable map on switch.
+       Default no map */
+    SAI_SWITCH_ATTR_QOS_TC_AND_COLOR_TO_DSCP_MAP,
+
     /* WRITE-ONLY */
 
     /* Port Breakout mode [sai_port_breakout_t] */
     SAI_SWITCH_ATTR_PORT_BREAKOUT,
 
     /* -- */
-    
+
     /* Custom range base value */
     SAI_SWITCH_ATTR_CUSTOM_RANGE_BASE  = 0x10000000
 
@@ -292,7 +373,7 @@ typedef enum _sai_switch_attr_t
 * Routine Description:
 *   Switch shutdown request callback.
 *   Adapter DLL may request a shutdown due to an unrecoverable failure
-*   or a maintenance operation 
+*   or a maintenance operation
 *
 * Arguments:
 *   None
@@ -330,12 +411,12 @@ typedef struct _sai_switch_notification_t
     sai_port_state_change_notification_fn   on_port_state_change;
     sai_port_event_notification_fn          on_port_event;
     sai_switch_shutdown_request_fn          on_switch_shutdown_request;
-	sai_packet_event_notification_fn        on_packet_event;
+    sai_packet_event_notification_fn        on_packet_event;
 } sai_switch_notification_t;
-  
+
 /*
 * Routine Description:
-*   SDK initialization. After the call the capability attributes should be 
+*   SDK initialization. After the call the capability attributes should be
 *   ready for retrieval via sai_get_switch_attribute().
 *
 * Arguments:
@@ -357,7 +438,7 @@ typedef sai_status_t (*sai_initialize_switch_fn)(
 
 /*
 * Routine Description:
-*   Release all resources associated with currently opened switch   
+*   Release all resources associated with currently opened switch
 *
 * Arguments:
 *   [in] warm_restart_hint - hint that indicates controlled warm restart.
@@ -374,8 +455,8 @@ typedef void (*sai_shutdown_switch_fn)(
 
 /*
 * Routine Description:
-*   SDK connect. This API connects library to the initialized SDK. 
-*   After the call the capability attributes should be ready for retrieval 
+*   SDK connect. This API connects library to the initialized SDK.
+*   After the call the capability attributes should be ready for retrieval
 *   via sai_get_switch_attribute().
 *
 * Arguments:
@@ -440,7 +521,7 @@ typedef sai_status_t (*sai_get_switch_attribute_fn)(
     );
 
 /*
-* Switch method table retrieved with sai_api_query() 
+* Switch method table retrieved with sai_api_query()
 */
 typedef struct _sai_switch_api_t
 {
